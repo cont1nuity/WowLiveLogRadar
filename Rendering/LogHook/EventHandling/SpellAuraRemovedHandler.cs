@@ -23,6 +23,10 @@ namespace Rendering.LogHook.EventHandling
                 var instance = EntityStateMaster.Instance;
                 instance.RemovePlayerHighlight(playerWithDebuff);
                 instance.PlaceIndicatorOnPlayerPosition(playerWithDebuff, spellId.ToString(), (189, 32, 63));
+            } else if (spellId == 404010 && args[12] == "DEBUFF"){ //unstable embers
+                var playerWithDebuff = args[5];
+                var instance = EntityStateMaster.Instance;
+                instance.RemovePlayerHighlight(playerWithDebuff);
             }
         }
     }

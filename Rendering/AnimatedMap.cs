@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Rendering.LogHook;
+using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -10,6 +13,8 @@ namespace Rendering
     {
         public AnimatedMap() {
             InitializeComponent();
+            this.debugWindow.Hide();
+            this.ClientSize = new System.Drawing.Size(861, 861);
         }
 
         private Timer tmr = new Timer();
@@ -17,7 +22,8 @@ namespace Rendering
             tmr.Interval = 100;
             tmr.Tick += new EventHandler(tmr_Tick);
             tmr.Start();
-            LogHook.EntityStateMaster.Instance.SetMainCharacter("Realshamzaa");
+            string mainChar = Microsoft.VisualBasic.Interaction.InputBox("Player name?", "Player Character Select", "N/A");
+            LogHook.EntityStateMaster.Instance.SetMainCharacter(mainChar);
             // doubt this is how you're supposed to do it but xdd
             StartHook();
         }
@@ -34,33 +40,35 @@ namespace Rendering
             var debuffDropLocationsToRender = state.GetIndicatorsToRender();
             var creaturesToRender = state.GetCreaturesToRender();
             var linesFromCreaturesToDraw = state.GetBeamsFromCreaturesToRender();
+            var minX = state.MinXPos; var minY = state.MinYPos;
+            var maxX = state.MaxXPos; var maxY = state.MaxYPos;
 
             foreach (var lineFromCreature in linesFromCreaturesToDraw) {
-                DrawLineFromEntityInFacingDirection(lineFromCreature.entity, lineFromCreature.beam, e);
+                DrawLineFromEntityInFacingDirection(lineFromCreature.entity, lineFromCreature.beam, e, minX, maxX, minY, maxY);
             }
 
             foreach (var creature in creaturesToRender) {
-                DrawCreature(creature, e);
+                DrawCreature(creature, e, minX, maxX, minY, maxY);
             }
 
             foreach (var indicatorEntity in debuffDropLocationsToRender) {
-                DrawIndicator(indicatorEntity, e);
+                DrawIndicator(indicatorEntity, e, minX, maxX, minY, maxY);
             }
 
             foreach (var playerEntity in playersToRender) {
-                DrawPlayer(playerEntity, e);
+                DrawPlayer(playerEntity, e, minX, maxX, minY, maxY);
             }
 
             foreach (var worldMarkerEntity in worldMarkersToRender) {
-                DrawWorldMarker(worldMarkerEntity.X, worldMarkerEntity.Y, worldMarkerEntity.RenderIdentifier, worldMarkerEntity.IsOnField, e);
+                DrawWorldMarker(worldMarkerEntity.X, worldMarkerEntity.Y, worldMarkerEntity.RenderIdentifier, worldMarkerEntity.IsOnField, e, minX, maxX, minY, maxY);
             }
 
         }
-        private void DrawIndicator(LogHook.Entity indicator, PaintEventArgs e) {
+        private void DrawIndicator(LogHook.Entity indicator, PaintEventArgs e, float minX, float maxX, float minY, float maxY) {
             if (!indicator.IsOnField) return;
 
-            float x1 = ((indicator.X + 2520) / (-2440 + 2520)) * 800;
-            float y1 = ((2460 - indicator.Y) / (2460 - 2380)) * 800;
+            float x1 = ((maxX - indicator.X) / (maxX - minX)) * 800;
+            float y1 = ((maxY - indicator.Y) / (maxY - minY)) * 800;
 
             var graphics = e.Graphics;
 
@@ -77,11 +85,12 @@ namespace Rendering
 
         }
 
-        private void DrawCreature(LogHook.Entity creature, PaintEventArgs e) {
+        private void DrawCreature(LogHook.Entity creature, PaintEventArgs e, float minX, float maxX, float minY, float maxY) {
             if (!creature.IsOnField) return;
 
-            float x1 = ((creature.X + 2520) / (-2440 + 2520)) * 800;
-            float y1 = ((2460 - creature.Y) / (2460 - 2380)) * 800;
+            float x1 = ((maxX - creature.X) / (maxX - minX)) * 800;
+            float y1 = ((maxY - creature.Y) / (maxY - minY)) * 800;
+            //Console.WriteLine(creature.X + "/" + creature.Y + " | " + minX + "-" + maxX + " | " + minY + "-" + maxY + " | " + x1 + "/" + y1);
 
             var graphics = e.Graphics;
             var image = Properties.Resources.boss;
@@ -89,12 +98,12 @@ namespace Rendering
 
         }
 
-        private void DrawPlayer(LogHook.Entity player, PaintEventArgs e) {
+        private void DrawPlayer(LogHook.Entity player, PaintEventArgs e, float minX, float maxX, float minY, float maxY) {
             if (!player.IsOnField) return;
 
-            float x1 = ((player.X + 2520) / (-2440 + 2520))*800;
-            float y1 = ((2460 - player.Y) / (2460 - 2380))*800;
-            
+            float x1 = ((maxX - player.X) / (maxX - minX)) * 800;
+            float y1 = ((maxY - player.Y) / (maxY - minY)) * 800;
+
             var graphics = e.Graphics;
 
             if(player.IsHighlighted) {
@@ -153,17 +162,18 @@ namespace Rendering
                 case "Warrior":
                     return (198, 155, 109);
                 default:
-                    throw new Exception($"unhandled class {playerClass}");
+                    return (153, 153, 153);
+                    //throw new Exception($"unhandled class {playerClass}");
             }
         }
 
-        private void DrawWorldMarker(float x, float y, string markerIdentifier, bool onField, PaintEventArgs e) {
+        private void DrawWorldMarker(float x, float y, string markerIdentifier, bool onField, PaintEventArgs e, float minX, float maxX, float minY, float maxY) {
             if (!onField) return;
 
             // todo: change with icons
             //var path = new System.Drawing.Drawing2D.GraphicsPath();
-            float x1 = ((x + 2520) / (-2440 + 2520)) * 800;
-            float y1 = ((2460 - y) / (2460 - 2380)) * 800;
+            float x1 = ((maxX - x) / (maxX - minX)) * 800;
+            float y1 = ((maxY - y) / (maxY - minY)) * 800;
             //path.AddEllipse(x1, y1, 10, 10);
             //var region = new Region(path);
             var graphics = e.Graphics;
@@ -195,9 +205,9 @@ namespace Rendering
                     throw new Exception($"unknown marker name {worldMarkerName}");
             }
         }
-        private void DrawLineFromEntityInFacingDirection(LogHook.Entity entity, LogHook.BeamEntity beam, PaintEventArgs e) {
-            float x1 = ((entity.X + 2520) / (-2440 + 2520)) * 800;
-            float y1 = ((2460 - entity.Y) / (2460 - 2380)) * 800;
+        private void DrawLineFromEntityInFacingDirection(LogHook.Entity entity, LogHook.BeamEntity beam, PaintEventArgs e, float minX, float maxX, float minY, float maxY) {
+            float x1 = ((maxX - entity.X) / (maxX - minX)) * 800;
+            float y1 = ((maxY - entity.Y) / (maxY - minY)) * 800;
             float x2 = x1 + beam.Length * (float)Math.Cos(entity.Rotation);
             float y2 = y1 - beam.Length * (float)Math.Sin(entity.Rotation);
 
@@ -209,13 +219,38 @@ namespace Rendering
         }
 
         private void StartHook() {
-            RunHookAsync();
+            var filePath = string.Empty;
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                //openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "WoW Combat Logs (WoWCombatLog*.txt)|WoWCombatLog*.txt|*.*|*.*";
+                openFileDialog.FilterIndex = 1;
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.Multiselect = false;
+
+
+                Process wow = Process.GetProcessesByName("Wow").FirstOrDefault();
+                if (wow != null) {
+                    Console.WriteLine(wow.MainModule.ModuleName);
+                    Console.WriteLine(wow.MainModule.FileName.Replace(wow.MainModule.ModuleName, "logs"));
+                    openFileDialog.InitialDirectory = wow.MainModule.FileName.Replace(wow.MainModule.ModuleName, "logs");
+                }
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    //Get the path of specified file
+                    filePath = openFileDialog.FileName;
+                    RunHookAsync(filePath);
+                } else
+                {
+                    Application.Exit();
+                }
+            }
         }
 
-        private async void RunHookAsync() {
+        private async void RunHookAsync(String filePath) {
             await Task.Run(() => {
-                LogHook.LogHook.ReadFile("C:\\Users\\Shamzaa\\scripts\\WowLiveLogRadar\\CombatLogEmulator\\outtest.txt");
-                //LogHook.LogHook.ReadFile("C:\\Program Files (x86)\\World of Warcraft\\_retail_\\Logs\\WoWCombatLog-081723_224538.txt");
+                LogHook.LogHook.ReadFile(filePath);
             });
         }
 

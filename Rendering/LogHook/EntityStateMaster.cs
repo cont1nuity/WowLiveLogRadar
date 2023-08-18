@@ -17,6 +17,15 @@ namespace Rendering.LogHook
         private List<Entity> DebuffDropLocationsToRender = new List<Entity>();
         private Dictionary<string, BeamEntity> BeamsOriginatingFromCreatures = new Dictionary<string, BeamEntity>();
         private string MainCharacterName;
+        private float maxX = float.MinValue;
+        private float minX = float.MaxValue;
+        private float maxY = float.MinValue;
+        private float minY = float.MaxValue;
+
+        public float MaxXPos { get { return maxX; } private set { if (maxX < value) { maxX = (float)Math.Round(value / 100, 2, MidpointRounding.AwayFromZero) * 100 + 10; } } }
+        public float MaxYPos { get { return maxY; } private set { if (maxY < value) { maxY = (float)Math.Round(value / 100, 2, MidpointRounding.AwayFromZero) * 100 + 10; } } }
+        public float MinXPos { get { return minX; } private set { if (minX > value) { minX = (float)Math.Round(value / 100, 2, MidpointRounding.AwayFromZero) * 100 - 10; } } }
+        public float MinYPos { get { return minY; } private set { if (minY > value) { minY = (float)Math.Round(value / 100, 2, MidpointRounding.AwayFromZero) * 100 - 10; } } }
 
         public static EntityStateMaster Instance { get { return Nested.instance; } }
 
@@ -37,11 +46,17 @@ namespace Rendering.LogHook
         }
 
         public void ClearState() {
+            if (IsInCombat) {
+                maxX = float.MinValue;
+                minX = float.MaxValue;
+                maxY = float.MinValue;
+                minY = float.MaxValue;
+            }
             PlayersToRender.Clear();
             CreaturesToRender.Clear();
             DebuffDropLocationsToRender.Clear();
             BeamsOriginatingFromCreatures.Clear();
-        }
+    }
 
         public void SetNameOnPlayer(string id, string name) {
             var player = PlayersToRender[id];
@@ -66,6 +81,11 @@ namespace Rendering.LogHook
                 entity.X = x;
                 entity.Y = y;
                 entity.IsOnField = isOnField;
+
+                MaxXPos = x;
+                MaxYPos = y;
+                MinXPos = x;
+                MinYPos = y;
             }
         }
 
@@ -80,6 +100,15 @@ namespace Rendering.LogHook
             // 0 rad is north from the logs, rotate half a rad clockwise and it will match our grid
             entity.Rotation = rotation + (float)(0.5*Math.PI);
             entity.IsOnField = isOnField;
+
+            MaxXPos = x;
+            MaxYPos = y;
+            MinXPos = x;
+            MinYPos = y;
+        }
+
+        public void RemoveCreatureToRender(string id) {
+            CreaturesToRender.Remove(id);
         }
 
         public void PlaceWorldMarker(string id, string markerName, float x, float y, bool isOnField = true) {
@@ -90,6 +119,12 @@ namespace Rendering.LogHook
                 RenderIdentifier=markerName,
                 IsOnField=isOnField
             };
+            /* exclude markers from this. just render them when visible.
+            MaxXPos = x;
+            MaxYPos = y;
+            MinXPos = x;
+            MinYPos = y;
+            */
         }
 
         public void FlagPlayerAsHighlighted(string id, (int R, int G, int B) highlightColour) {

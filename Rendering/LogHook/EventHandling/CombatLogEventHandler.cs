@@ -47,6 +47,9 @@ namespace Rendering.LogHook.EventHandling
             },
             {
                 "ENCOUNTER_END", new EncounterEndHandler()
+            },
+            {
+                "UNIT_DIED", new UnitDiedHandler()
             }
 
 

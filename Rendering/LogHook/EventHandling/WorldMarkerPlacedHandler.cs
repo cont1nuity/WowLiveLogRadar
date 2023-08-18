@@ -23,7 +23,7 @@ namespace Rendering.LogHook.EventHandling
             // 4 - pos -x?
 
 
-            float x = -float.Parse(args[4], CultureInfo.InvariantCulture);
+            float x = float.Parse(args[4], CultureInfo.InvariantCulture);
             float y = float.Parse(args[3], CultureInfo.InvariantCulture);
             var markerId = int.Parse(args[2], CultureInfo.InvariantCulture);
 

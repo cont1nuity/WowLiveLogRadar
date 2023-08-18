@@ -78,7 +78,8 @@ namespace Rendering.LogHook.EventHandling
                 case 73:
                     return "Warrior";
                 default:
-                    throw new Exception($"unhandled spec {specId}");
+                    return "Unknown";
+                    //throw new Exception($"unhandled spec {specId}");
 
             }
         }

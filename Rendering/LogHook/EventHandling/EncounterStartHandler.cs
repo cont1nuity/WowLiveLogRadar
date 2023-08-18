@@ -10,6 +10,7 @@ namespace Rendering.LogHook.EventHandling
     {
         public void Handle(string[] args) {
             EntityStateMaster.Instance.IsInCombat = true;
+            EntityStateMaster.Instance.ClearState();
         }
     }
 }

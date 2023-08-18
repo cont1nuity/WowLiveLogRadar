@@ -15,6 +15,7 @@ namespace Rendering.LogHook
         public static void ReadFile(string sourcePath) {
 
             var handler = new CombatLogEventHandler();
+            var regx = new Regex(',' + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 
             var wh = new AutoResetEvent(false);
             var fsw = new FileSystemWatcher(".");
@@ -44,7 +45,7 @@ namespace Rendering.LogHook
                         var lines = Regex.Split(s, "[\r\n]+").Where(l => !string.IsNullOrEmpty(l)).ToArray();
                         if (!IsStartOfCombatLogEvent(lines[0])) {
                             lines[0] = lastLine + lines[0];
-                        } else if (!string.IsNullOrEmpty(lastLine)){
+                        } else if (!string.IsNullOrEmpty(lastLine)) {
                             lines.Prepend(lastLine);
                         }
                         // TODO: if it's not a broken line, we need to include that lastline, otherwise it gets skipped
@@ -53,7 +54,6 @@ namespace Rendering.LogHook
                         lastLine = lines.Last();
                         lines = lines.Take(lines.Count() - 1).ToArray();
                         foreach (var line in lines) {
-                            var regx = new Regex(',' + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
                             //var eventArguments = regx.Split(line);
                             string argumentsString = line.Split(new string[] { "  " }, StringSplitOptions.None)[1];
                             //var eventArguments = argumentsString.Split(',');

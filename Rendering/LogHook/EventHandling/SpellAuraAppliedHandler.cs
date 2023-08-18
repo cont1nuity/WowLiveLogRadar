@@ -23,6 +23,11 @@ namespace Rendering.LogHook.EventHandling
                 EntityStateMaster.Instance.FlagPlayerAsHighlighted(playerWithDebuff, (47, 180, 237));
                 // TODO: add current active debuff to list of debuffs 
                 // TODO: attach line between player and skull marker or something
+            } else if (spellId == 404010 && args[12] == "DEBUFF") { //unstable embers
+                var playerWithDebuff = args[5];
+                EntityStateMaster.Instance.FlagPlayerAsHighlighted(playerWithDebuff, (47, 180, 237));
+                // TODO: add current active debuff to list of debuffs 
+                // TODO: area highlight around player 5y
             }
         }
     }
