@@ -59,6 +59,9 @@ namespace Rendering.LogHook
     }
 
         public void SetNameOnPlayer(string id, string name) {
+            if (!PlayersToRender.ContainsKey(id)) {
+                InitiatePlayer(id, "Unknown");
+            }
             var player = PlayersToRender[id];
             player.name = name;
             if(player.name.Contains(MainCharacterName)) {
@@ -76,17 +79,18 @@ namespace Rendering.LogHook
         }
 
         public void SetPlayerPosition(string id, float x, float y, bool isOnField = true) {
-            if (PlayersToRender.ContainsKey(id)) {
-                var entity = PlayersToRender[id];
-                entity.X = x;
-                entity.Y = y;
-                entity.IsOnField = isOnField;
-
-                MaxXPos = x;
-                MaxYPos = y;
-                MinXPos = x;
-                MinYPos = y;
+            if (!PlayersToRender.ContainsKey(id)) {
+                InitiatePlayer(id, "Unknown");
             }
+            var entity = PlayersToRender[id];
+            entity.X = x;
+            entity.Y = y;
+            entity.IsOnField = isOnField;
+
+            MaxXPos = x;
+            MaxYPos = y;
+            MinXPos = x;
+            MinYPos = y;
         }
 
         public void SetCreaturePosition(string id, float x, float y, float rotation, bool isOnField = true) {
